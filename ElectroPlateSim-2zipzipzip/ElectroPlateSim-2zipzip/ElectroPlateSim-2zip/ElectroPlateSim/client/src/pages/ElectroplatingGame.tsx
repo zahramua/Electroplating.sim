@@ -62,6 +62,7 @@ const translations = {
     previous: "Previous",
     next: "Next",
     startPlating: "Start Plating!",
+    electronNote: "The electron on the anode part might not move upward, if so, move it horizontally",
     tutorial: {
       welcome: "Welcome to Electroplating Lab!",
       welcomeDesc: "Learn how electroplating works by simulating the process step by step. You'll plate a copper ring with silver!",
@@ -130,6 +131,7 @@ const translations = {
     previous: "السابق",
     next: "التالي",
     startPlating: "ابدأ الطلاء!",
+    electronNote: "قد لا يتحرك الإلكترون في جزء الأنود لأعلى، إذا حدث ذلك فحركه أفقياً",
     tutorial: {
       welcome: "مرحباً بك في مختبر الطلاء الكهربائي!",
       welcomeDesc: "تعلم كيف يعمل الطلاء الكهربائي من خلال محاكاة العملية خطوة بخطوة. ستقوم بطلاء حلقة نحاسية بالفضة!",
@@ -1070,6 +1072,11 @@ export default function ElectroplatingGame() {
                 ))}
               </AnimatePresence>
             </div>
+          </div>
+
+          {/* Electron movement note */}
+          <div className="text-center text-xs text-slate-500 mt-4">
+            {t.electronNote}
           </div>
 
           {/* Electrons on wire - strictly constrained to wire path */}
