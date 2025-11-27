@@ -340,11 +340,12 @@ export default function ElectroplatingGame() {
   const [isAnodeConnected, setIsAnodeConnected] = useState(false);
   const [isCathodeConnected, setIsCathodeConnected] = useState(false);
 
-  const [showTutorial, setShowTutorial] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
   const [currentDotProgress, setCurrentDotProgress] = useState(0);
   const [draggingElectronId, setDraggingElectronId] = useState<string | null>(null);
   const [language, setLanguage] = useState<Language>('en');
+  const [showLanguageSelector, setShowLanguageSelector] = useState(true);
 
   const t = translations[language];
   const tutorialSteps = getTutorialSteps(t);
@@ -687,8 +688,6 @@ export default function ElectroplatingGame() {
     setShowSuccess(false);
     setIsAnodeConnected(false);
     setIsCathodeConnected(false);
-    setShowTutorial(true);
-    setTutorialStep(0);
   };
   
   const getCurrentDotPosition = useCallback(() => {
@@ -1078,7 +1077,7 @@ export default function ElectroplatingGame() {
             className="absolute inset-0 w-full h-full" 
             viewBox="0 0 1000 600" 
             preserveAspectRatio="xMidYMid meet"
-            style={{ zIndex: 40, pointerEvents: 'auto' }}
+            style={{ zIndex: 40, pointerEvents: 'none' }}
             onMouseMove={(e) => {
               if (!draggingElectronId) return;
               
@@ -1141,7 +1140,7 @@ export default function ElectroplatingGame() {
                 <g
                   key={electron.id}
                   transform={`translate(${electron.x}, ${electron.y})`}
-                  style={{ cursor: draggingElectronId === electron.id ? 'grabbing' : 'grab', pointerEvents: 'auto' }}
+                  style={{ cursor: draggingElectronId === electron.id ? 'grabbing' : 'grab', pointerEvents: 'auto', userSelect: 'none' }}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1180,6 +1179,38 @@ export default function ElectroplatingGame() {
           </svg>
         </div>
       </main>
+
+      <Dialog open={showLanguageSelector} onOpenChange={setShowLanguageSelector}>
+        <DialogContent className="bg-white border-slate-200 text-slate-900 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-slate-800 text-xl">Select Language</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-4">
+            <Button 
+              onClick={() => {
+                setLanguage('en');
+                setShowLanguageSelector(false);
+                setShowTutorial(true);
+                setTutorialStep(0);
+              }}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-6"
+            >
+              English
+            </Button>
+            <Button 
+              onClick={() => {
+                setLanguage('ar');
+                setShowLanguageSelector(false);
+                setShowTutorial(true);
+                setTutorialStep(0);
+              }}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-6"
+            >
+              العربية
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
         <DialogContent className="bg-slate-900 border-slate-700 text-slate-100" dir={isRTL ? 'rtl' : 'ltr'}>
