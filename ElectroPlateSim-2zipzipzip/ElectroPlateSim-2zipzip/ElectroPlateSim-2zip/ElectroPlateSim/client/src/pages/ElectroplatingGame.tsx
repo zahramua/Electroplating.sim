@@ -1,48 +1,162 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Battery, RefreshCw, Info, FlaskConical, Microscope, Trophy, Plug, HelpCircle, ChevronRight, ChevronLeft, X } from 'lucide-react';
+import { Battery, RefreshCw, Info, FlaskConical, Microscope, Trophy, Plug, HelpCircle, ChevronRight, ChevronLeft, X, Globe } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const TUTORIAL_STEPS = [
-  {
-    title: "Welcome to Electroplating Lab!",
-    content: "Learn how silver electroplating works by simulating the process step by step. You'll plate a copper ring with silver!",
-    highlight: null
+type Language = 'en' | 'ar';
+
+const translations = {
+  en: {
+    title: "ELECTROPLATING LAB",
+    subtitle: "Ag (Silver) → Cu (Copper)",
+    electrodeStatus: "Electrode Status",
+    silverAnode: "Silver Anode",
+    copperRing: "Copper Ring",
+    silverPlatedRing: "Silver Plated Ring",
+    sourceOfIons: "Source of Ag⁺ ions",
+    targetForPlating: "Target for plating",
+    silverCoated: "silver coated",
+    atomicView: "Atomic View",
+    silverAnodeSurface: "Silver Anode Surface",
+    cathodeSurface: "Cathode Surface",
+    atomsTransfer: "Atoms transfer from the anode lattice to the cathode surface.",
+    dcPower: "DC POWER",
+    wireToAnode: "Wire to Anode",
+    wireToCathode: "Wire to Cathode",
+    circuitOpen: "Circuit Open",
+    connectWiresFirst: "Connect the wires to the battery first!",
+    anodeDepleted: "Anode Depleted",
+    anodeDepletedDesc: "The silver anode has run out of material!",
+    tooManyParticles: "Too Many Particles",
+    tooManyParticlesDesc: "Maximum 5 particles allowed. Wait for some to complete.",
+    stayInSolution: "Stay in Solution!",
+    stayInSolutionDesc: "Ions can only move within the electrolyte solution.",
+    waitForElectron: "Wait for Electron",
+    waitForElectronDesc: "An electron must be at the cathode first!",
+    electronAtBattery: "Electron at Battery",
+    electronAtBatteryDesc: "Drag from -ve terminal to cathode!",
+    platingSuccessful: "Plating Successful!",
+    silverDeposited: "Silver deposited on cathode!",
+    anodeConnected: "Anode Connected",
+    wireAttachedAnode: "Wire attached to silver anode.",
+    cathodeConnected: "Cathode Connected",
+    wireAttachedCathode: "Wire attached to copper ring.",
+    electroplatingComplete: "Electroplating Complete!",
+    ringPlatedSuccess: "Copper ring has been successfully electroplated with silver!",
+    summary: "Summary:",
+    massConsumed: "Silver Anode mass consumed:",
+    ringFullySilver: "Ring is now fully silver colored!",
+    startNewExperiment: "Start New Experiment",
+    howToPlay: "How to play:",
+    step1: "Drag the Wires to connect Anode & Cathode to Battery.",
+    step2: "Click Anode to release Ag⁺ Ion & Electron (e⁻).",
+    step3: "Drag e⁻ along the wire to the Battery.",
+    step4: "Drag e⁻ from Battery along wire to Copper Ring.",
+    step5: "Drag Ag⁺ from solution to Copper Ring.",
+    step6: "Watch the ring gradually turn silver!",
+    previous: "Previous",
+    next: "Next",
+    startPlating: "Start Plating!",
+    tutorial: {
+      welcome: "Welcome to Electroplating Lab!",
+      welcomeDesc: "Learn how silver electroplating works by simulating the process step by step. You'll plate a copper ring with silver!",
+      step1Title: "Step 1: Connect the Circuit",
+      step1Desc: "First, drag both wire handles to connect the anode (silver bar) and cathode (copper ring) to the battery. The circuit must be complete before plating can begin.",
+      step2Title: "Step 2: Release Silver Ions",
+      step2Desc: "Click on the silver anode (the bar on the left) to release a silver ion (Ag+) into the solution. This also releases an electron (e-) onto the wire.",
+      step3Title: "Step 3: Move the Electron",
+      step3Desc: "Drag the electron (e-) along the wire to the battery's positive (+) terminal. Electrons can only travel through wires, not through the solution!",
+      step4Title: "Step 4: Electron to Cathode",
+      step4Desc: "A new electron appears at the negative (-) terminal. Drag it along the wire down to the copper ring (cathode).",
+      step5Title: "Step 5: Complete the Plating",
+      step5Desc: "Now drag the silver ion (Ag+) through the solution to the copper ring. When the ion meets the electron, silver gets deposited on the ring!",
+      readyTitle: "You're Ready!",
+      readyDesc: "Repeat this process to fully plate the copper ring with silver. Watch the ring gradually turn from copper to silver color!"
+    }
   },
-  {
-    title: "Step 1: Connect the Circuit",
-    content: "First, drag both wire handles to connect the anode (silver bar) and cathode (copper ring) to the battery. The circuit must be complete before plating can begin.",
-    highlight: "wires"
-  },
-  {
-    title: "Step 2: Release Silver Ions",
-    content: "Click on the silver anode (the bar on the left) to release a silver ion (Ag+) into the solution. This also releases an electron (e-) onto the wire.",
-    highlight: "anode"
-  },
-  {
-    title: "Step 3: Move the Electron",
-    content: "Drag the electron (e-) along the wire to the battery's positive (+) terminal. Electrons can only travel through wires, not through the solution!",
-    highlight: "anode_wire"
-  },
-  {
-    title: "Step 4: Electron to Cathode",
-    content: "A new electron appears at the negative (-) terminal. Drag it along the wire down to the copper ring (cathode).",
-    highlight: "cathode_wire"
-  },
-  {
-    title: "Step 5: Complete the Plating",
-    content: "Now drag the silver ion (Ag+) through the solution to the copper ring. When the ion meets the electron, silver gets deposited on the ring!",
-    highlight: "cathode"
-  },
-  {
-    title: "You're Ready!",
-    content: "Repeat this process to fully plate the copper ring with silver. Watch the ring gradually turn from copper to silver color!",
-    highlight: null
+  ar: {
+    title: "مختبر الطلاء الكهربائي",
+    subtitle: "الفضة (Ag) ← النحاس (Cu)",
+    electrodeStatus: "حالة القطب",
+    silverAnode: "أنود الفضة",
+    copperRing: "حلقة النحاس",
+    silverPlatedRing: "حلقة مطلية بالفضة",
+    sourceOfIons: "مصدر أيونات Ag⁺",
+    targetForPlating: "الهدف للطلاء",
+    silverCoated: "مطلي بالفضة",
+    atomicView: "العرض الذري",
+    silverAnodeSurface: "سطح أنود الفضة",
+    cathodeSurface: "سطح الكاثود",
+    atomsTransfer: "تنتقل الذرات من شبكة الأنود إلى سطح الكاثود.",
+    dcPower: "طاقة تيار مستمر",
+    wireToAnode: "سلك للأنود",
+    wireToCathode: "سلك للكاثود",
+    circuitOpen: "الدائرة مفتوحة",
+    connectWiresFirst: "قم بتوصيل الأسلاك بالبطارية أولاً!",
+    anodeDepleted: "نفاد الأنود",
+    anodeDepletedDesc: "نفدت مادة أنود الفضة!",
+    tooManyParticles: "جسيمات كثيرة جداً",
+    tooManyParticlesDesc: "الحد الأقصى 5 جسيمات. انتظر حتى تكتمل بعضها.",
+    stayInSolution: "ابق في المحلول!",
+    stayInSolutionDesc: "يمكن للأيونات التحرك فقط داخل محلول الإلكتروليت.",
+    waitForElectron: "انتظر الإلكترون",
+    waitForElectronDesc: "يجب أن يكون هناك إلكترون عند الكاثود أولاً!",
+    electronAtBattery: "الإلكترون عند البطارية",
+    electronAtBatteryDesc: "اسحب من القطب السالب إلى الكاثود!",
+    platingSuccessful: "نجح الطلاء!",
+    silverDeposited: "تم ترسيب الفضة على الكاثود!",
+    anodeConnected: "تم توصيل الأنود",
+    wireAttachedAnode: "تم توصيل السلك بأنود الفضة.",
+    cathodeConnected: "تم توصيل الكاثود",
+    wireAttachedCathode: "تم توصيل السلك بحلقة النحاس.",
+    electroplatingComplete: "اكتمل الطلاء الكهربائي!",
+    ringPlatedSuccess: "تم طلاء حلقة النحاس بالفضة بنجاح!",
+    summary: "ملخص:",
+    massConsumed: "كتلة الأنود المستهلكة:",
+    ringFullySilver: "الحلقة الآن مطلية بالكامل بالفضة!",
+    startNewExperiment: "ابدأ تجربة جديدة",
+    howToPlay: "كيفية اللعب:",
+    step1: "اسحب الأسلاك لتوصيل الأنود والكاثود بالبطارية.",
+    step2: "انقر على الأنود لإطلاق أيون Ag⁺ وإلكترون (e⁻).",
+    step3: "اسحب e⁻ على طول السلك إلى البطارية.",
+    step4: "اسحب e⁻ من البطارية على طول السلك إلى حلقة النحاس.",
+    step5: "اسحب Ag⁺ من المحلول إلى حلقة النحاس.",
+    step6: "شاهد الحلقة تتحول تدريجياً إلى اللون الفضي!",
+    previous: "السابق",
+    next: "التالي",
+    startPlating: "ابدأ الطلاء!",
+    tutorial: {
+      welcome: "مرحباً بك في مختبر الطلاء الكهربائي!",
+      welcomeDesc: "تعلم كيف يعمل طلاء الفضة الكهربائي من خلال محاكاة العملية خطوة بخطوة. ستقوم بطلاء حلقة نحاسية بالفضة!",
+      step1Title: "الخطوة 1: أكمل الدائرة",
+      step1Desc: "أولاً، اسحب مقابض الأسلاك لتوصيل الأنود (قضيب الفضة) والكاثود (حلقة النحاس) بالبطارية. يجب أن تكتمل الدائرة قبل بدء الطلاء.",
+      step2Title: "الخطوة 2: أطلق أيونات الفضة",
+      step2Desc: "انقر على أنود الفضة (القضيب على اليسار) لإطلاق أيون فضة (Ag+) في المحلول. هذا يطلق أيضاً إلكتروناً (e-) على السلك.",
+      step3Title: "الخطوة 3: حرك الإلكترون",
+      step3Desc: "اسحب الإلكترون (e-) على طول السلك إلى القطب الموجب (+) للبطارية. يمكن للإلكترونات السفر فقط عبر الأسلاك، وليس عبر المحلول!",
+      step4Title: "الخطوة 4: الإلكترون إلى الكاثود",
+      step4Desc: "يظهر إلكترون جديد عند القطب السالب (-). اسحبه على طول السلك إلى حلقة النحاس (الكاثود).",
+      step5Title: "الخطوة 5: أكمل الطلاء",
+      step5Desc: "الآن اسحب أيون الفضة (Ag+) عبر المحلول إلى حلقة النحاس. عندما يلتقي الأيون بالإلكترون، يترسب الفضة على الحلقة!",
+      readyTitle: "أنت جاهز!",
+      readyDesc: "كرر هذه العملية لطلاء حلقة النحاس بالكامل بالفضة. شاهد الحلقة تتحول تدريجياً من اللون النحاسي إلى الفضي!"
+    }
   }
+};
+
+const getTutorialSteps = (t: typeof translations.en) => [
+  { title: t.tutorial.welcome, content: t.tutorial.welcomeDesc, highlight: null },
+  { title: t.tutorial.step1Title, content: t.tutorial.step1Desc, highlight: "wires" },
+  { title: t.tutorial.step2Title, content: t.tutorial.step2Desc, highlight: "anode" },
+  { title: t.tutorial.step3Title, content: t.tutorial.step3Desc, highlight: "anode_wire" },
+  { title: t.tutorial.step4Title, content: t.tutorial.step4Desc, highlight: "cathode_wire" },
+  { title: t.tutorial.step5Title, content: t.tutorial.step5Desc, highlight: "cathode" },
+  { title: t.tutorial.readyTitle, content: t.tutorial.readyDesc, highlight: null }
 ];
 
 const useSoundEffects = () => {
@@ -230,6 +344,11 @@ export default function ElectroplatingGame() {
   const [tutorialStep, setTutorialStep] = useState(0);
   const [currentDotProgress, setCurrentDotProgress] = useState(0);
   const [draggingElectronId, setDraggingElectronId] = useState<string | null>(null);
+  const [language, setLanguage] = useState<Language>('en');
+
+  const t = translations[language];
+  const tutorialSteps = getTutorialSteps(t);
+  const isRTL = language === 'ar';
 
   const { toast } = useToast();
   const sounds = useSoundEffects();
@@ -341,8 +460,8 @@ export default function ElectroplatingGame() {
     if (!isAnodeConnected || !isCathodeConnected) {
       sounds.playError();
       toast({
-        title: "Circuit Open",
-        description: "Connect the wires to the battery first!",
+        title: t.circuitOpen,
+        description: t.connectWiresFirst,
         variant: "destructive"
       });
       return;
@@ -351,8 +470,8 @@ export default function ElectroplatingGame() {
     if (anodeMass <= 10) {
       sounds.playError();
       toast({
-        title: "Anode Depleted",
-        description: "The silver anode has run out of material!",
+        title: t.anodeDepleted,
+        description: t.anodeDepletedDesc,
         variant: "destructive"
       });
       return;
@@ -362,8 +481,8 @@ export default function ElectroplatingGame() {
     if (activeParticles >= 5) {
       sounds.playError();
       toast({
-        title: "Too Many Particles",
-        description: "Maximum 5 particles allowed. Wait for some to complete.",
+        title: t.tooManyParticles,
+        description: t.tooManyParticlesDesc,
         variant: "destructive",
         duration: 1500
       });
@@ -423,8 +542,8 @@ export default function ElectroplatingGame() {
     )) {
       sounds.playError();
       toast({
-        title: "Stay in Solution!",
-        description: "Ions can only move within the electrolyte solution.",
+        title: t.stayInSolution,
+        description: t.stayInSolutionDesc,
         variant: "destructive",
         duration: 1500
       });
@@ -449,8 +568,8 @@ export default function ElectroplatingGame() {
         !hasWaitingElectron) {
       sounds.playError();
       toast({
-        title: "Wait for Electron",
-        description: "An electron must be at the cathode first!",
+        title: t.waitForElectron,
+        description: t.waitForElectronDesc,
         variant: "destructive",
         duration: 1500
       });
@@ -502,8 +621,8 @@ export default function ElectroplatingGame() {
         
         sounds.playSuccess();
         toast({
-          title: "Electron at Battery",
-          description: "Drag from -ve terminal to cathode!",
+          title: t.electronAtBattery,
+          description: t.electronAtBatteryDesc,
           duration: 1500,
           className: "bg-yellow-500/10 border-yellow-500/30 text-yellow-200 h-12"
         });
@@ -550,14 +669,14 @@ export default function ElectroplatingGame() {
         });
         
         toast({
-          title: "Plating Successful!",
-          description: "Silver deposited on cathode!",
+          title: t.platingSuccessful,
+          description: t.silverDeposited,
           duration: 1500,
           className: "bg-green-500/20 border-green-500/50 text-green-100"
         });
       }
     }
-  }, [ions, electrons, toast, sounds]);
+  }, [ions, electrons, toast, sounds, t]);
 
   const resetGame = () => {
     setAnodeMass(ANODE_START_MASS);
@@ -593,19 +712,29 @@ export default function ElectroplatingGame() {
   }, [isCircuitComplete, anodeWirePoints, cathodeWirePoints, currentDotProgress]);
 
   return (
-    <div className="min-h-screen w-full bg-white text-slate-900 p-4 md:p-8 font-sans overflow-hidden flex flex-col items-center">
+    <div className="min-h-screen w-full bg-white text-slate-900 p-4 md:p-8 font-sans overflow-hidden flex flex-col items-center" dir={isRTL ? 'rtl' : 'ltr'}>
       
       <header className="w-full max-w-6xl flex justify-between items-center mb-8 z-10">
         <div>
           <h1 className="text-3xl md:text-4xl font-display font-bold tracking-wider text-slate-900">
-            ELECTROPLATING LAB
+            {t.title}
           </h1>
           <p className="text-slate-600 text-sm mt-1 flex items-center gap-2">
-            <FlaskConical size={14} /> Ag (Silver) → Cu (Copper)
+            <FlaskConical size={14} /> {t.subtitle}
           </p>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <Select value={language} onValueChange={(val: Language) => setLanguage(val)}>
+            <SelectTrigger className="w-[130px] bg-slate-100 border-slate-300">
+              <Globe size={16} className="mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">English</SelectItem>
+              <SelectItem value="ar">العربية</SelectItem>
+            </SelectContent>
+          </Select>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -614,14 +743,14 @@ export default function ElectroplatingGame() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs bg-slate-900 border-slate-700 text-slate-100 p-4">
-                <p className="mb-2 font-semibold">How to play:</p>
+                <p className="mb-2 font-semibold">{t.howToPlay}</p>
                 <ol className="list-decimal list-inside space-y-1 text-xs">
-                  <li>Drag the <strong>Wires</strong> to connect Anode & Cathode to Battery.</li>
-                  <li>Click Anode to release <strong>Ag⁺ Ion</strong> & <strong>Electron (e⁻)</strong>.</li>
-                  <li>Drag <strong>e⁻</strong> along the wire to the Battery.</li>
-                  <li>Drag <strong>e⁻</strong> from Battery along wire to Copper Ring.</li>
-                  <li>Drag <strong>Ag⁺</strong> from solution to Copper Ring.</li>
-                  <li>Watch the ring gradually turn silver!</li>
+                  <li>{t.step1}</li>
+                  <li>{t.step2}</li>
+                  <li>{t.step3}</li>
+                  <li>{t.step4}</li>
+                  <li>{t.step5}</li>
+                  <li>{t.step6}</li>
                 </ol>
               </TooltipContent>
             </Tooltip>
@@ -643,12 +772,12 @@ export default function ElectroplatingGame() {
           
           <Card className="bg-slate-50 border-slate-200 p-6 space-y-6">
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-4">Electrode Status</h3>
+              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-4">{t.electrodeStatus}</h3>
               
               <div className="space-y-6">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-gradient-to-br from-gray-100 to-gray-400"/> Silver Anode</span>
+                    <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-gradient-to-br from-gray-100 to-gray-400"/> {t.silverAnode}</span>
                     <span className="font-mono">{anodeMass}g</span>
                   </div>
                   <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -658,7 +787,7 @@ export default function ElectroplatingGame() {
                       animate={{ width: `${(anodeMass / ANODE_START_MASS) * 100}%` }}
                     />
                   </div>
-                  <p className="text-xs text-slate-600">Source of Ag⁺ ions</p>
+                  <p className="text-xs text-slate-600">{t.sourceOfIons}</p>
                 </div>
 
                 <div className="space-y-2">
@@ -668,7 +797,7 @@ export default function ElectroplatingGame() {
                         className="w-3 h-3 rounded-full"
                         animate={{ backgroundColor: getRingColor() }}
                       />
-                      Copper Ring
+                      {t.copperRing}
                     </span>
                     <span className="font-mono">{cathodeMass}g</span>
                   </div>
@@ -680,7 +809,7 @@ export default function ElectroplatingGame() {
                       animate={{ width: `${(cathodeMass / (CATHODE_START_MASS + ANODE_START_MASS)) * 100}%` }}
                     />
                   </div>
-                  <p className="text-xs text-slate-600">Target for plating ({Math.round((platedCount / TOTAL_PLATING_GOAL) * 100)}% silver coated)</p>
+                  <p className="text-xs text-slate-600">{t.targetForPlating} ({Math.round((platedCount / TOTAL_PLATING_GOAL) * 100)}% {t.silverCoated})</p>
                 </div>
               </div>
             </div>
@@ -689,12 +818,12 @@ export default function ElectroplatingGame() {
           <Card className="bg-slate-50 border-slate-200 p-4">
             <div className="flex items-center gap-2 mb-3 text-slate-700">
               <Microscope size={16} />
-              <h3 className="text-sm font-semibold uppercase tracking-wider">Atomic View</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider">{t.atomicView}</h3>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-slate-100 p-3 rounded-md border border-slate-300">
-                <div className="text-[10px] text-center mb-2 text-slate-600">Silver Anode Surface</div>
+                <div className="text-[10px] text-center mb-2 text-slate-600">{t.silverAnodeSurface}</div>
                 <div className="grid grid-cols-4 gap-1">
                   {Array.from({ length: 16 }).map((_, i) => {
                     const isGone = i >= Math.ceil((anodeMass / ANODE_START_MASS) * 16);
@@ -710,7 +839,7 @@ export default function ElectroplatingGame() {
               </div>
 
               <div className="bg-slate-100 p-3 rounded-md border border-slate-300">
-                <div className="text-[10px] text-center mb-2 text-slate-600">Cathode Surface</div>
+                <div className="text-[10px] text-center mb-2 text-slate-600">{t.cathodeSurface}</div>
                 <div className="grid grid-cols-4 gap-1">
                   {Array.from({ length: 16 }).map((_, i) => {
                     const isPlated = i < Math.min(16, Math.floor(platedCount * 2.7));
@@ -733,7 +862,7 @@ export default function ElectroplatingGame() {
               </div>
             </div>
             <div className="mt-3 text-[10px] text-slate-600 text-center leading-tight">
-              Atoms transfer from the anode lattice to the cathode surface.
+              {t.atomsTransfer}
             </div>
           </Card>
         </div>
@@ -804,7 +933,7 @@ export default function ElectroplatingGame() {
                 <div ref={minusTerminalRef} className="w-3 h-3 rounded-full bg-blue-500 mt-0.5 border border-blue-600"></div>
               </div>
             </div>
-            <div className="text-[9px] font-mono text-slate-600 text-center">DC POWER</div>
+            <div className="text-[9px] font-mono text-slate-600 text-center">{t.dcPower}</div>
           </div>
 
           {/* Wire handles */}
@@ -821,14 +950,14 @@ export default function ElectroplatingGame() {
                     info.point.y <= anodeRect.bottom + 50) {
                   setIsAnodeConnected(true);
                   sounds.playConnect();
-                  toast({ title: "Anode Connected", description: "Wire attached to silver anode." });
+                  toast({ title: t.anodeConnected, description: t.wireAttachedAnode });
                 }
               }}
               className="absolute top-24 left-[20%] z-50 cursor-grab active:cursor-grabbing"
               whileHover={{ scale: 1.1 }}
             >
               <div className="flex items-center gap-2 bg-slate-600 px-3 py-1 rounded-full border border-slate-500 shadow-lg text-white text-xs">
-                <Plug size={12} /> Wire to Anode
+                <Plug size={12} /> {t.wireToAnode}
               </div>
             </motion.div>
           )}
@@ -846,14 +975,14 @@ export default function ElectroplatingGame() {
                     info.point.y <= cathodeRect.bottom + 50) {
                   setIsCathodeConnected(true);
                   sounds.playConnect();
-                  toast({ title: "Cathode Connected", description: "Wire attached to copper ring." });
+                  toast({ title: t.cathodeConnected, description: t.wireAttachedCathode });
                 }
               }}
               className="absolute top-24 right-[20%] z-50 cursor-grab active:cursor-grabbing"
               whileHover={{ scale: 1.1 }}
             >
               <div className="flex items-center gap-2 bg-slate-600 px-3 py-1 rounded-full border border-slate-500 shadow-lg text-white text-xs">
-                <Plug size={12} /> Wire to Cathode
+                <Plug size={12} /> {t.wireToCathode}
               </div>
             </motion.div>
           )}
@@ -887,7 +1016,7 @@ export default function ElectroplatingGame() {
                     <span className="text-xs font-bold text-white text-center">Click</span>
                   </div>
                 </motion.div>
-                <div className="text-center mt-2 text-xs font-bold text-slate-500">Silver Anode</div>
+                <div className="text-center mt-2 text-xs font-bold text-slate-500">{t.silverAnode}</div>
               </div>
 
               {/* Cathode */}
@@ -905,7 +1034,7 @@ export default function ElectroplatingGame() {
                 </motion.div>
 
                 <div className="text-center mt-6 text-xs font-bold" style={{ color: getRingColor() }}>
-                  {platedCount >= TOTAL_PLATING_GOAL ? 'Silver Plated Ring' : 'Copper Ring'}
+                  {platedCount >= TOTAL_PLATING_GOAL ? t.silverPlatedRing : t.copperRing}
                 </div>
               </div>
             </div>
@@ -949,7 +1078,7 @@ export default function ElectroplatingGame() {
             className="absolute inset-0 w-full h-full" 
             viewBox="0 0 1000 600" 
             preserveAspectRatio="xMidYMid meet"
-            style={{ zIndex: 40 }}
+            style={{ zIndex: 40, pointerEvents: draggingElectronId ? 'auto' : 'none' }}
             onMouseMove={(e) => {
               if (!draggingElectronId) return;
               
@@ -1012,7 +1141,7 @@ export default function ElectroplatingGame() {
                 <g
                   key={electron.id}
                   transform={`translate(${electron.x}, ${electron.y})`}
-                  style={{ cursor: draggingElectronId === electron.id ? 'grabbing' : 'grab' }}
+                  style={{ cursor: draggingElectronId === electron.id ? 'grabbing' : 'grab', pointerEvents: 'auto' }}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1053,47 +1182,47 @@ export default function ElectroplatingGame() {
       </main>
 
       <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-slate-100">
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-100" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-green-400 text-2xl">
-              <Trophy size={24} /> Electroplating Complete!
+              <Trophy size={24} /> {t.electroplatingComplete}
             </DialogTitle>
             <DialogDescription className="text-slate-400 pt-2 text-lg">
-              Copper ring has been successfully electroplated with silver!
+              {t.ringPlatedSuccess}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
             <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 text-sm">
-              <p className="mb-2"><strong>Summary:</strong></p>
+              <p className="mb-2"><strong>{t.summary}</strong></p>
               <ul className="list-disc list-inside space-y-1 text-slate-400">
-                <li>Silver Anode mass consumed: {ANODE_START_MASS - anodeMass}g</li>
-                <li>Ring is now fully silver colored!</li>
+                <li>{t.massConsumed} {ANODE_START_MASS - anodeMass}g</li>
+                <li>{t.ringFullySilver}</li>
               </ul>
             </div>
             <Button onClick={resetGame} className="w-full bg-primary hover:bg-primary/90 text-white font-bold">
-              Start New Experiment
+              {t.startNewExperiment}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={showTutorial} onOpenChange={setShowTutorial}>
-        <DialogContent className="bg-white border-slate-200 text-slate-900 max-w-lg">
+        <DialogContent className="bg-white border-slate-200 text-slate-900 max-w-lg" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-slate-800 text-xl">
-              <HelpCircle size={22} className="text-blue-500" /> {TUTORIAL_STEPS[tutorialStep].title}
+              <HelpCircle size={22} className="text-blue-500" /> {tutorialSteps[tutorialStep].title}
             </DialogTitle>
             <DialogDescription className="sr-only">
-              Tutorial step {tutorialStep + 1} of {TUTORIAL_STEPS.length}
+              Tutorial step {tutorialStep + 1} of {tutorialSteps.length}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <p className="text-slate-600 leading-relaxed">
-              {TUTORIAL_STEPS[tutorialStep].content}
+              {tutorialSteps[tutorialStep].content}
             </p>
             
             <div className="flex items-center justify-center gap-1 mt-6 mb-4">
-              {TUTORIAL_STEPS.map((_, index) => (
+              {tutorialSteps.map((_, index) => (
                 <div 
                   key={index}
                   className={`w-2 h-2 rounded-full transition-colors ${
@@ -1110,22 +1239,22 @@ export default function ElectroplatingGame() {
                 disabled={tutorialStep === 0}
                 className="flex items-center gap-1"
               >
-                <ChevronLeft size={16} /> Previous
+                {isRTL ? <ChevronRight size={16} /> : <ChevronLeft size={16} />} {t.previous}
               </Button>
               
-              {tutorialStep < TUTORIAL_STEPS.length - 1 ? (
+              {tutorialStep < tutorialSteps.length - 1 ? (
                 <Button 
                   onClick={() => setTutorialStep(prev => prev + 1)}
                   className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white"
                 >
-                  Next <ChevronRight size={16} />
+                  {t.next} {isRTL ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
                 </Button>
               ) : (
                 <Button 
                   onClick={() => setShowTutorial(false)}
                   className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white"
                 >
-                  Start Plating!
+                  {t.startPlating}
                 </Button>
               )}
             </div>

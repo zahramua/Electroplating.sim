@@ -6,9 +6,13 @@ ElectroPlateSim is an interactive educational web application that simulates the
 
 ## Recent Changes (November 2025)
 
+- **Bilingual Support**: Added full English and Arabic (العربية) language support with a language selector dropdown
+  - All UI text, labels, tooltips, dialogs, and tutorials are fully translated
+  - RTL (right-to-left) text direction support for Arabic language
+  - Language preference persists in component state
 - **Current Visualization**: Changed from dashed animation to a single moving dot that travels along the wires
 - **Circuit Completion Logic**: Current dot only appears when both anode and cathode wires are connected to the battery
-- **Tutorial System**: Added 7-step interactive tutorial that explains the electroplating process
+- **Tutorial System**: Added 7-step interactive tutorial that explains the electroplating process (available in both languages)
 - **Help Button**: Added help icon in header to relaunch the tutorial at any time
 - **Electron Size**: Increased electron size for easier dragging (r=18) while keeping it smaller than ions (32px)
 - **Electron Wire Constraint**: Electrons are now strictly constrained to wire paths only - they cannot move through the electrolyte
