@@ -1010,19 +1010,23 @@ export default function ElectroplatingGame() {
                     width: 56 * (anodeMass / ANODE_START_MASS),
                     clipPath: (() => {
                       const depletionFactor = 1 - anodeMass / ANODE_START_MASS;
-                      const bite1 = Math.min(30, depletionFactor * 50);
-                      const bite2 = Math.min(35, depletionFactor * 60);
-                      const bite3 = Math.min(40, depletionFactor * 70);
+                      // Only show bites after first ion release
+                      if (depletionFactor < 0.01) {
+                        return 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)';
+                      }
+                      const bite1 = Math.min(45, depletionFactor * 120);
+                      const bite2 = Math.min(50, depletionFactor * 140);
+                      const bite3 = Math.min(55, depletionFactor * 160);
                       return `polygon(
                         0% 0%,
                         100% 0%,
-                        100% ${10 + bite1}%,
-                        90% ${15 + bite1 * 0.8}%,
-                        100% ${25 + bite2}%,
-                        92% ${35 + bite2 * 0.7}%,
-                        100% ${50 + bite3}%,
-                        88% ${60 + bite3 * 0.6}%,
-                        100% ${75 + bite1 * 0.5}%,
+                        100% ${8 + bite1}%,
+                        82% ${12 + bite1 * 0.9}%,
+                        100% ${20 + bite2}%,
+                        85% ${30 + bite2 * 0.8}%,
+                        100% ${45 + bite3}%,
+                        80% ${55 + bite3 * 0.7}%,
+                        100% ${70 + bite1 * 0.6}%,
                         100% 100%,
                         0% 100%
                       )`;
