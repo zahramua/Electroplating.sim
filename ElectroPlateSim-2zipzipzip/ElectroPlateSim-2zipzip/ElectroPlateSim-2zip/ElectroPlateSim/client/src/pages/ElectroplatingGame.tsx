@@ -1044,7 +1044,7 @@ export default function ElectroplatingGame() {
                 {ions.map((ion) => ion.status === 'active' && (
                   <motion.div
                     key={`${ion.id}-${ionResetKey}`}
-                    initial={{ x: 70, y: 100, opacity: 0, scale: 0 }}
+                    initial={{ x: isRTL ? -70 : 70, y: 100, opacity: 0, scale: 0 }}
                     animate={{ 
                       opacity: 1, 
                       scale: 1,
