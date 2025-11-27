@@ -1004,24 +1004,33 @@ export default function ElectroplatingGame() {
                 <div ref={anodeConnectorRef} className={`absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-gray-600 border-2 border-gray-500 z-20 ${isAnodeConnected ? '' : 'opacity-0'}`}></div>
                 
                 <motion.div 
-                  className="relative w-14 metallic-silver rounded-sm shadow-lg cursor-pointer border border-white/20 z-10 overflow-hidden"
-                  style={{ height: 200 }} 
-                  animate={{ 
+                  className="relative metallic-silver shadow-lg cursor-pointer border border-white/20 z-10 overflow-visible"
+                  style={{ 
+                    height: 200,
                     width: 56 * (anodeMass / ANODE_START_MASS),
+                    clipPath: (() => {
+                      const depletionFactor = 1 - anodeMass / ANODE_START_MASS;
+                      const bite1 = Math.min(30, depletionFactor * 50);
+                      const bite2 = Math.min(35, depletionFactor * 60);
+                      const bite3 = Math.min(40, depletionFactor * 70);
+                      return `polygon(
+                        0% 0%,
+                        100% 0%,
+                        100% ${10 + bite1}%,
+                        90% ${15 + bite1 * 0.8}%,
+                        100% ${25 + bite2}%,
+                        92% ${35 + bite2 * 0.7}%,
+                        100% ${50 + bite3}%,
+                        88% ${60 + bite3 * 0.6}%,
+                        100% ${75 + bite1 * 0.5}%,
+                        100% 100%,
+                        0% 100%
+                      )`;
+                    })()
                   }} 
                   onClick={spawnIon}
                 >
                   <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
-                  
-                  {/* Corrosion effect overlay */}
-                  <div 
-                    className="absolute inset-0 pointer-events-none rounded-sm"
-                    style={{ 
-                      opacity: Math.min(1, (1 - anodeMass / ANODE_START_MASS) * 2),
-                      backgroundImage: 'radial-gradient(circle at 15% 25%, rgba(0,0,0,0.6) 0%, transparent 35%), radial-gradient(circle at 85% 55%, rgba(0,0,0,0.55) 0%, transparent 40%), radial-gradient(circle at 45% 75%, rgba(0,0,0,0.5) 0%, transparent 30%), radial-gradient(circle at 30% 65%, rgba(0,0,0,0.45) 0%, transparent 25%), radial-gradient(circle at 60% 35%, rgba(0,0,0,0.4) 0%, transparent 28%)',
-                      transition: 'opacity 0.3s ease-in-out'
-                    }}
-                  />
                   
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
                     <span className="text-xs font-bold text-white text-center">Click</span>
