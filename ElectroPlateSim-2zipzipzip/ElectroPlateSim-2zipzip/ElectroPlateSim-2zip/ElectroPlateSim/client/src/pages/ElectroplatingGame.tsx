@@ -1013,6 +1013,16 @@ export default function ElectroplatingGame() {
                 >
                   <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
                   
+                  {/* Corrosion effect overlay */}
+                  <motion.div 
+                    className="absolute inset-0 pointer-events-none rounded-sm"
+                    style={{ 
+                      opacity: 1 - (anodeMass / ANODE_START_MASS),
+                      backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(0,0,0,0.3) 0%, transparent 40%), radial-gradient(circle at 80% 60%, rgba(0,0,0,0.25) 0%, transparent 35%), radial-gradient(circle at 40% 80%, rgba(0,0,0,0.2) 0%, transparent 30%)',
+                      mixBlendMode: 'multiply'
+                    }}
+                  />
+                  
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
                     <span className="text-xs font-bold text-white text-center">Click</span>
                   </div>
