@@ -1078,7 +1078,7 @@ export default function ElectroplatingGame() {
             className="absolute inset-0 w-full h-full" 
             viewBox="0 0 1000 600" 
             preserveAspectRatio="xMidYMid meet"
-            style={{ zIndex: 40, pointerEvents: draggingElectronId ? 'auto' : 'none' }}
+            style={{ zIndex: 40, pointerEvents: 'auto' }}
             onMouseMove={(e) => {
               if (!draggingElectronId) return;
               
