@@ -64,7 +64,7 @@ const translations = {
     startPlating: "Start Plating!",
     tutorial: {
       welcome: "Welcome to Electroplating Lab!",
-      welcomeDesc: "Learn how silver electroplating works by simulating the process step by step. You'll plate a copper ring with silver!",
+      welcomeDesc: "Learn how electroplating works by simulating the process step by step. You'll plate a copper ring with silver!",
       step1Title: "Step 1: Connect the Circuit",
       step1Desc: "First, drag both wire handles to connect the anode (silver bar) and cathode (copper ring) to the battery. The circuit must be complete before plating can begin.",
       step2Title: "Step 2: Release Silver Ions",
@@ -132,7 +132,7 @@ const translations = {
     startPlating: "ابدأ الطلاء!",
     tutorial: {
       welcome: "مرحباً بك في مختبر الطلاء الكهربائي!",
-      welcomeDesc: "تعلم كيف يعمل طلاء الفضة الكهربائي من خلال محاكاة العملية خطوة بخطوة. ستقوم بطلاء حلقة نحاسية بالفضة!",
+      welcomeDesc: "تعلم كيف يعمل الطلاء الكهربائي من خلال محاكاة العملية خطوة بخطوة. ستقوم بطلاء حلقة نحاسية بالفضة!",
       step1Title: "الخطوة 1: أكمل الدائرة",
       step1Desc: "أولاً، اسحب مقابض الأسلاك لتوصيل الأنود (قضيب الفضة) والكاثود (حلقة النحاس) بالبطارية. يجب أن تكتمل الدائرة قبل بدء الطلاء.",
       step2Title: "الخطوة 2: أطلق أيونات الفضة",
