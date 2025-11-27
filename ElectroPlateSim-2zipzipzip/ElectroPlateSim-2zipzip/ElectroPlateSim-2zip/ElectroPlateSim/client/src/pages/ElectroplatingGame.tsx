@@ -1,11 +1,49 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Battery, RefreshCw, Info, FlaskConical, Microscope, Trophy, Plug } from 'lucide-react';
+import { Battery, RefreshCw, Info, FlaskConical, Microscope, Trophy, Plug, HelpCircle, ChevronRight, ChevronLeft, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+
+const TUTORIAL_STEPS = [
+  {
+    title: "Welcome to Electroplating Lab!",
+    content: "Learn how silver electroplating works by simulating the process step by step. You'll plate a copper ring with silver!",
+    highlight: null
+  },
+  {
+    title: "Step 1: Connect the Circuit",
+    content: "First, drag both wire handles to connect the anode (silver bar) and cathode (copper ring) to the battery. The circuit must be complete before plating can begin.",
+    highlight: "wires"
+  },
+  {
+    title: "Step 2: Release Silver Ions",
+    content: "Click on the silver anode (the bar on the left) to release a silver ion (Ag+) into the solution. This also releases an electron (e-) onto the wire.",
+    highlight: "anode"
+  },
+  {
+    title: "Step 3: Move the Electron",
+    content: "Drag the electron (e-) along the wire to the battery's positive (+) terminal. Electrons can only travel through wires, not through the solution!",
+    highlight: "anode_wire"
+  },
+  {
+    title: "Step 4: Electron to Cathode",
+    content: "A new electron appears at the negative (-) terminal. Drag it along the wire down to the copper ring (cathode).",
+    highlight: "cathode_wire"
+  },
+  {
+    title: "Step 5: Complete the Plating",
+    content: "Now drag the silver ion (Ag+) through the solution to the copper ring. When the ion meets the electron, silver gets deposited on the ring!",
+    highlight: "cathode"
+  },
+  {
+    title: "You're Ready!",
+    content: "Repeat this process to fully plate the copper ring with silver. Watch the ring gradually turn from copper to silver color!",
+    highlight: null
+  }
+];
 
 const useSoundEffects = () => {
   const audioContext = useRef<AudioContext | null>(null);
@@ -188,8 +226,30 @@ export default function ElectroplatingGame() {
   const [isAnodeConnected, setIsAnodeConnected] = useState(false);
   const [isCathodeConnected, setIsCathodeConnected] = useState(false);
 
+  const [showTutorial, setShowTutorial] = useState(true);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [currentDotProgress, setCurrentDotProgress] = useState(0);
+
   const { toast } = useToast();
   const sounds = useSoundEffects();
+  
+  const isCircuitComplete = isAnodeConnected && isCathodeConnected;
+  
+  useEffect(() => {
+    if (!isCircuitComplete) {
+      setCurrentDotProgress(0);
+      return;
+    }
+    
+    const interval = setInterval(() => {
+      setCurrentDotProgress(prev => {
+        const next = prev + 0.01;
+        return next > 1 ? 0 : next;
+      });
+    }, 50);
+    
+    return () => clearInterval(interval);
+  }, [isCircuitComplete]);
   
   const cathodeRef = useRef<HTMLDivElement>(null);
   const beakerRef = useRef<HTMLDivElement>(null);
@@ -507,7 +567,29 @@ export default function ElectroplatingGame() {
     setShowSuccess(false);
     setIsAnodeConnected(false);
     setIsCathodeConnected(false);
+    setShowTutorial(true);
+    setTutorialStep(0);
   };
+  
+  const getCurrentDotPosition = useCallback(() => {
+    if (!isCircuitComplete) return null;
+    
+    const totalAnodeLength = anodeWirePoints.length > 1 ? anodeWirePoints.length - 1 : 0;
+    const totalCathodeLength = cathodeWirePoints.length > 1 ? cathodeWirePoints.length - 1 : 0;
+    const totalLength = totalAnodeLength + totalCathodeLength;
+    
+    if (totalLength === 0) return null;
+    
+    const anodeRatio = totalAnodeLength / totalLength;
+    
+    if (currentDotProgress <= anodeRatio) {
+      const anodeProgress = currentDotProgress / anodeRatio;
+      return getPointOnPath(anodeWirePoints, anodeProgress);
+    } else {
+      const cathodeProgress = (currentDotProgress - anodeRatio) / (1 - anodeRatio);
+      return getPointOnPath(cathodeWirePoints, cathodeProgress);
+    }
+  }, [isCircuitComplete, anodeWirePoints, cathodeWirePoints, currentDotProgress]);
 
   return (
     <div className="min-h-screen w-full bg-white text-slate-900 p-4 md:p-8 font-sans overflow-hidden flex flex-col items-center">
@@ -544,6 +626,10 @@ export default function ElectroplatingGame() {
             </Tooltip>
           </TooltipProvider>
 
+          <Button variant="outline" size="icon" onClick={() => { setShowTutorial(true); setTutorialStep(0); }} className="rounded-full bg-slate-100 border-slate-300 hover:bg-slate-200">
+            <HelpCircle size={18} />
+          </Button>
+          
           <Button variant="outline" size="icon" onClick={resetGame} className="rounded-full bg-slate-100 border-slate-300 hover:bg-slate-200">
             <RefreshCw size={18} />
           </Button>
@@ -660,69 +746,48 @@ export default function ElectroplatingGame() {
             preserveAspectRatio="xMidYMid meet"
             style={{ zIndex: 5 }}
           >
-            <defs>
-              <style>{`
-                @keyframes flowCurrent {
-                  0% { stroke-dashoffset: 0; opacity: 0.8; }
-                  50% { opacity: 1; }
-                  100% { stroke-dashoffset: -40; opacity: 0.8; }
-                }
-                .current-path {
-                  stroke-dasharray: 20, 20;
-                  animation: flowCurrent 1.5s linear infinite;
-                }
-              `}</style>
-            </defs>
-            
-            {/* Anode wire path */}
+            {/* Anode wire path - only show wire, no animation unless both connected */}
             {isAnodeConnected && anodeWirePoints.length > 0 && (
-              <>
-                <path 
-                  d={createPathD(anodeWirePoints)}
-                  fill="none" 
-                  stroke="#444444" 
-                  strokeWidth="12" 
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d={createPathD(anodeWirePoints)}
-                  fill="none" 
-                  stroke="#FACC15" 
-                  strokeWidth="8" 
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="current-path"
-                  opacity={0.8}
-                  filter="drop-shadow(0 0 4px rgba(250, 204, 21, 0.6))"
-                />
-              </>
+              <path 
+                d={createPathD(anodeWirePoints)}
+                fill="none" 
+                stroke="#444444" 
+                strokeWidth="10" 
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             )}
             
-            {/* Cathode wire path */}
+            {/* Cathode wire path - only show wire, no animation unless both connected */}
             {isCathodeConnected && cathodeWirePoints.length > 0 && (
-              <>
-                <path 
-                  d={createPathD(cathodeWirePoints)}
-                  fill="none" 
-                  stroke="#444444" 
-                  strokeWidth="12" 
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d={createPathD(cathodeWirePoints)}
-                  fill="none" 
-                  stroke="#FACC15" 
-                  strokeWidth="8" 
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="current-path"
-                  opacity={0.8}
-                  filter="drop-shadow(0 0 4px rgba(250, 204, 21, 0.6))"
-                />
-              </>
+              <path 
+                d={createPathD(cathodeWirePoints)}
+                fill="none" 
+                stroke="#444444" 
+                strokeWidth="10" 
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             )}
+            
+            {/* Single moving current dot - only shown when both wires connected */}
+            {isCircuitComplete && (() => {
+              const dotPos = getCurrentDotPosition();
+              if (!dotPos) return null;
+              return (
+                <circle
+                  cx={dotPos.x}
+                  cy={dotPos.y}
+                  r="8"
+                  fill="#FACC15"
+                  stroke="#EAB308"
+                  strokeWidth="2"
+                  style={{ 
+                    filter: 'drop-shadow(0 0 6px rgba(250, 204, 21, 0.9))'
+                  }}
+                />
+              );
+            })()}
           </svg>
 
           {/* Battery at top center */}
@@ -955,6 +1020,62 @@ export default function ElectroplatingGame() {
             <Button onClick={resetGame} className="w-full bg-primary hover:bg-primary/90 text-white font-bold">
               Start New Experiment
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showTutorial} onOpenChange={setShowTutorial}>
+        <DialogContent className="bg-white border-slate-200 text-slate-900 max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-slate-800 text-xl">
+              <HelpCircle size={22} className="text-blue-500" /> {TUTORIAL_STEPS[tutorialStep].title}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Tutorial step {tutorialStep + 1} of {TUTORIAL_STEPS.length}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-slate-600 leading-relaxed">
+              {TUTORIAL_STEPS[tutorialStep].content}
+            </p>
+            
+            <div className="flex items-center justify-center gap-1 mt-6 mb-4">
+              {TUTORIAL_STEPS.map((_, index) => (
+                <div 
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === tutorialStep ? 'bg-blue-500' : 'bg-slate-200'
+                  }`}
+                />
+              ))}
+            </div>
+            
+            <div className="flex justify-between gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setTutorialStep(prev => Math.max(0, prev - 1))}
+                disabled={tutorialStep === 0}
+                className="flex items-center gap-1"
+              >
+                <ChevronLeft size={16} /> Previous
+              </Button>
+              
+              {tutorialStep < TUTORIAL_STEPS.length - 1 ? (
+                <Button 
+                  onClick={() => setTutorialStep(prev => prev + 1)}
+                  className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  Next <ChevronRight size={16} />
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => setShowTutorial(false)}
+                  className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white"
+                >
+                  Start Plating!
+                </Button>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
