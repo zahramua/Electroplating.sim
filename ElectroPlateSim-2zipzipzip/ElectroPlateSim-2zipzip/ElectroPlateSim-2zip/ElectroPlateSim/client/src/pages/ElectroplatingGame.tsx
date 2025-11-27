@@ -317,7 +317,7 @@ function getProgressFromDrag(
     }
   }
   
-  return bestProgress;
+  return Math.max(currentProgress, bestProgress);
 }
 
 function createPathD(points: { x: number; y: number }[]): string {
