@@ -229,6 +229,7 @@ export default function ElectroplatingGame() {
   const [showTutorial, setShowTutorial] = useState(true);
   const [tutorialStep, setTutorialStep] = useState(0);
   const [currentDotProgress, setCurrentDotProgress] = useState(0);
+  const [draggingElectronId, setDraggingElectronId] = useState<string | null>(null);
 
   const { toast } = useToast();
   const sounds = useSoundEffects();
@@ -943,56 +944,108 @@ export default function ElectroplatingGame() {
             </div>
           </div>
 
-          {/* Electrons on wire */}
+          {/* Electrons on wire - strictly constrained to wire path */}
           <svg 
-            className="absolute inset-0 w-full h-full pointer-events-none" 
+            className="absolute inset-0 w-full h-full" 
             viewBox="0 0 1000 600" 
             preserveAspectRatio="xMidYMid meet"
             style={{ zIndex: 40 }}
+            onMouseMove={(e) => {
+              if (!draggingElectronId) return;
+              
+              const currentSvg = e.currentTarget.getBoundingClientRect();
+              const svgX = (e.clientX - currentSvg.left) * (1000 / currentSvg.width);
+              const svgY = (e.clientY - currentSvg.top) * (600 / currentSvg.height);
+              
+              const electron = electrons.find(el => el.id === draggingElectronId);
+              if (!electron) return;
+              
+              const points = electron.segment === 'anode_wire' ? anodeWirePoints : cathodeWirePoints;
+              if (points.length > 0) {
+                const newProgress = getProgressFromDrag(points, svgX, svgY, electron.progress || 0);
+                const newPos = getPointOnPath(points, newProgress);
+                setElectrons(prev => prev.map(el => 
+                  el.id === draggingElectronId ? { ...el, x: newPos.x, y: newPos.y, progress: newProgress } : el
+                ));
+              }
+            }}
+            onMouseUp={() => {
+              if (draggingElectronId) {
+                handleElectronDragEnd(draggingElectronId);
+                setDraggingElectronId(null);
+              }
+            }}
+            onMouseLeave={() => {
+              if (draggingElectronId) {
+                setDraggingElectronId(null);
+              }
+            }}
+            onTouchMove={(e) => {
+              if (!draggingElectronId || e.touches.length === 0) return;
+              
+              const touch = e.touches[0];
+              const currentSvg = e.currentTarget.getBoundingClientRect();
+              const svgX = (touch.clientX - currentSvg.left) * (1000 / currentSvg.width);
+              const svgY = (touch.clientY - currentSvg.top) * (600 / currentSvg.height);
+              
+              const electron = electrons.find(el => el.id === draggingElectronId);
+              if (!electron) return;
+              
+              const points = electron.segment === 'anode_wire' ? anodeWirePoints : cathodeWirePoints;
+              if (points.length > 0) {
+                const newProgress = getProgressFromDrag(points, svgX, svgY, electron.progress || 0);
+                const newPos = getPointOnPath(points, newProgress);
+                setElectrons(prev => prev.map(el => 
+                  el.id === draggingElectronId ? { ...el, x: newPos.x, y: newPos.y, progress: newProgress } : el
+                ));
+              }
+            }}
+            onTouchEnd={() => {
+              if (draggingElectronId) {
+                handleElectronDragEnd(draggingElectronId);
+                setDraggingElectronId(null);
+              }
+            }}
           >
             <AnimatePresence>
               {electrons.filter(e => e.status === 'active').map((electron) => (
-                <motion.g
+                <g
                   key={electron.id}
-                  initial={{ opacity: 0, x: electron.x, y: electron.y }}
-                  animate={{ 
-                    opacity: 1,
-                    x: electron.x,
-                    y: electron.y
+                  transform={`translate(${electron.x}, ${electron.y})`}
+                  style={{ cursor: draggingElectronId === electron.id ? 'grabbing' : 'grab' }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDraggingElectronId(electron.id);
                   }}
-                  transition={{ x: { duration: 0 }, y: { duration: 0 } }}
-                  exit={{ opacity: 0 }}
-                  style={{ pointerEvents: 'auto', cursor: 'grab' }}
-                  drag
-                  dragMomentum={false}
-                  dragElastic={0}
-                  onDrag={(e, info) => handleElectronDrag(electron.id, info)}
-                  onDragEnd={() => handleElectronDragEnd(electron.id)}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    setDraggingElectronId(electron.id);
+                  }}
                 >
-                  <motion.circle
+                  <circle
                     cx={0}
                     cy={0}
-                    r="12"
+                    r="18"
                     fill="#FACC15"
                     stroke="#EAB308"
-                    strokeWidth="2.5"
+                    strokeWidth="3"
                     style={{ 
-                      filter: 'drop-shadow(0 0 6px rgba(253, 224, 71, 0.8))'
+                      filter: 'drop-shadow(0 0 8px rgba(253, 224, 71, 0.9))'
                     }}
-                    whileHover={{ r: 14, filter: 'drop-shadow(0 0 10px rgba(253, 224, 71, 1))' }}
                   />
                   <text
                     x={0}
-                    y={3}
+                    y={5}
                     textAnchor="middle"
-                    fontSize="9"
+                    fontSize="12"
                     fontWeight="bold"
                     fill="#854D0E"
                     style={{ pointerEvents: 'none', userSelect: 'none' }}
                   >
                     e⁻
                   </text>
-                </motion.g>
+                </g>
               ))}
             </AnimatePresence>
           </svg>

@@ -10,6 +10,8 @@ ElectroPlateSim is an interactive educational web application that simulates the
 - **Circuit Completion Logic**: Current dot only appears when both anode and cathode wires are connected to the battery
 - **Tutorial System**: Added 7-step interactive tutorial that explains the electroplating process
 - **Help Button**: Added help icon in header to relaunch the tutorial at any time
+- **Electron Size**: Increased electron size for easier dragging (r=18) while keeping it smaller than ions (32px)
+- **Electron Wire Constraint**: Electrons are now strictly constrained to wire paths only - they cannot move through the electrolyte
 
 ## User Preferences
 
