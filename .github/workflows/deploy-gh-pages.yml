@@ -24,7 +24,7 @@ jobs:
           node-version: "18"
 
       - name: Install dependencies (project folder)
-        run: npm ci
+        run: npm install
         working-directory: ElectroPlateSim-2zipzipzip/ElectroPlateSim-2zipzip/ElectroPlateSim-2zip/ElectroPlateSim
 
       - name: Build project
