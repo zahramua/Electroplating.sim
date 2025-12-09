@@ -38,7 +38,7 @@ jobs:
           echo "DIST PATH: ElectroPlateSim-2zipzipzip/ElectroPlateSim-2zipzip/ElectroPlateSim-2zip/ElectroPlateSim/dist"
           ls -la ElectroPlateSim-2zipzipzip/ElectroPlateSim-2zipzip/ElectroPlateSim-2zip/ElectroPlateSim/dist || true
 
-      - name: Debug: git info (debug)
+      - name: "Debug: git info (debug)"
         run: |
           echo "git user:"
           git config --global user.name || true
