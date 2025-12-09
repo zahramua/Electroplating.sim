@@ -6,6 +6,8 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { metaImagesPlugin } from "./vite-plugin-meta-images";
 
 export default defineConfig({
+  // Ensure built asset URLs include the repository path for GitHub Pages
+  base: "/Electroplating.sim/",
   plugins: [
     react(),
     runtimeErrorOverlay(),
