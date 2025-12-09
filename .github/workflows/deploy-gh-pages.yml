@@ -26,22 +26,31 @@ jobs:
           node-version: "18"
 
       - name: Install dependencies (project folder)
-        run: npm install
+        run: npm ci
         working-directory: ElectroPlateSim-2zipzipzip/ElectroPlateSim-2zipzip/ElectroPlateSim-2zip/ElectroPlateSim
 
       - name: Build project
         run: npm run build
         working-directory: ElectroPlateSim-2zipzipzip/ElectroPlateSim-2zipzip/ElectroPlateSim-2zip/ElectroPlateSim
 
-      - name: List dist (for debugging)
+      - name: Show dist (debug)
         run: |
-          echo "Dist contents:"
+          echo "DIST PATH: ElectroPlateSim-2zipzipzip/ElectroPlateSim-2zipzip/ElectroPlateSim-2zip/ElectroPlateSim/dist"
           ls -la ElectroPlateSim-2zipzipzip/ElectroPlateSim-2zipzip/ElectroPlateSim-2zip/ElectroPlateSim/dist || true
+
+      - name: Debug: git info (debug)
+        run: |
+          echo "git user:"
+          git config --global user.name || true
+          git config --global user.email || true
+          echo "remote:"
+          git remote -v || true
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Use the personal token secret recommended below (fallback to GITHUB_TOKEN if you prefer)
+          github_token: ${{ secrets.GH_PAGES_TOKEN || secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ElectroPlateSim-2zipzipzip/ElectroPlateSim-2zipzip/ElectroPlateSim-2zip/ElectroPlateSim/dist
           user_name: "github-actions[bot]"
