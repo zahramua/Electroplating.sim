@@ -49,8 +49,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          # Use the personal token secret recommended below (fallback to GITHUB_TOKEN if you prefer)
-          github_token: ${{ secrets.GH_PAGES_TOKEN || secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_PAGES_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ElectroPlateSim-2zipzipzip/ElectroPlateSim-2zipzip/ElectroPlateSim-2zip/ElectroPlateSim/dist
           user_name: "github-actions[bot]"
