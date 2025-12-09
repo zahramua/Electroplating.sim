@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        # Build from the project root (where package-lock.json and script/build.ts live)
         working-directory: ElectroPlateSim-2zipzipzip/ElectroPlateSim-2zipzip/ElectroPlateSim-2zip/ElectroPlateSim
     steps:
       - name: Checkout
@@ -25,7 +24,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install
         run: npm ci
@@ -36,8 +34,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Publish the built static site
-          path: ElectroPlateSim-2zipzipzip/ElectroPlateSim-2zipzip/ElectroPlateSim-2zip/ElectroPlateSim/dist/public
+          path: ./dist/public
 
   deploy:
     environment:
